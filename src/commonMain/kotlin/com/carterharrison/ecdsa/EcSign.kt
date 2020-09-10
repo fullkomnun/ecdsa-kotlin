@@ -1,8 +1,9 @@
 package com.carterharrison.ecdsa
 
 import com.carterharrison.ecdsa.hash.EcHasher
-import java.math.BigInteger
-import java.security.SecureRandom
+import com.ionspin.kotlin.bignum.integer.BigInteger
+import com.ionspin.kotlin.bignum.integer.Sign
+import com.soywiz.krypto.SecureRandom
 
 object EcSign {
 
@@ -13,7 +14,7 @@ object EcSign {
      * @return A secure random number between [1 and n - 1]
      */
     private fun getRandomK (n : BigInteger) : BigInteger {
-        val randomValue = BigInteger(256, SecureRandom())
+        val randomValue = BigInteger(SecureRandom().nextBits(256))
 
         if (randomValue >= n || randomValue <= BigInteger.ONE) {
             return getRandomK(n)
@@ -32,7 +33,7 @@ object EcSign {
      */
     fun signData (keyPair: EcKeyPair, data : ByteArray, hasher : EcHasher) : EcSignature {
         // todo range from 1 to n-1
-        val hash = BigInteger(1, hasher.hash(data))
+        val hash = BigInteger.fromByteArray(hasher.hash(data), Sign.POSITIVE)
         val g = keyPair.publicKey.curve.g
         val n = keyPair.publicKey.curve.n
         val k = getRandomK(n) % n
@@ -61,7 +62,7 @@ object EcSign {
      * @return If the signature is valid
      */
     fun verifySignature (publicKey : EcPoint, data: ByteArray, hasher: EcHasher, signature: EcSignature) : Boolean {
-        val hash = BigInteger(1, hasher.hash(data))
+        val hash = BigInteger.fromByteArray(hasher.hash(data), Sign.POSITIVE)
         val g = publicKey.curve.g
         val n = publicKey.curve.n
         val r = signature.r
